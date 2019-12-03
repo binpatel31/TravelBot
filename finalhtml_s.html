@@ -1,0 +1,214 @@
+<html>
+<head>
+<title>Chatbot</title>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="finalhtml.css">
+
+</head>
+<body>
+<script type="text/javascript">
+function readMore() {
+  var dots = document.getElementsByName("dots");
+  dots = dots[dots.length-1];
+  var moreText = document.getElementsByName("more");
+  moreText = moreText[moreText.length-1];
+  console.log(moreText.innerHTML);
+  var btnText = document.getElementsByName("myBtn");
+  btnText = btnText[btnText.length-1];
+	console.log(dots.style.display);
+  if (dots.style.display == "inline") {
+    dots.style.display = "none";
+    btnText.innerHTML = "Read less"; 
+    moreText.style.display = "inline";
+  } else {
+    dots.style.display = "inline";
+    btnText.innerHTML = "Read more"; 
+    moreText.style.display = "none";
+  }
+}
+
+function updateScroll(){
+    var element = document.getElementById("msgbx");
+    element.scrollTop = element.scrollHeight;
+}
+
+$(document).ready(function() {
+
+	var socket = io.connect('http://127.0.0.1:5000');
+
+	socket.on('connect', function() {
+		socket.send("Welcome");
+		console.log("Conected!");
+	});
+
+	socket.on('message', function(msg) {
+		$("#messages").append('<div class="container darker"><li><b><span class="hc">Server:</span></b><p>'+msg+'</p></li></div>');
+        updateScroll()
+		
+	});
+
+	$('#sendbutton').on('click', function() {
+		socket.send($('#myMessage').val());
+		$("#messages").append('<div class="containerv"><b><span class="hc">Client:</span></b><li><p>'+$('#myMessage').val()+'</p></li></div>');
+        $('#myMessage').val('');
+        updateScroll()
+        
+	});
+$('#myMessage').keyup(function(event){
+    if(event.keyCode == 13){
+        $('#sendbutton').click();
+    }
+});    
+
+
+    
+});
+</script>
+
+<!-- Modal Image Pop UP   -->
+<div id="myModal" class="modal">
+		<!-- The Close Button -->
+		<span class="close" onclick="document.getElementById('myModal').style.display='none';">&times;</span>
+		<!-- Modal Content (The Image) -->
+		<img class="modal-content" id="img01">
+		<!-- Modal Caption (Image Text) -->
+		<div id="caption"></div>
+</div>
+
+<!-- Modal Text Pop UP   -->
+<div id="myModalT" class="modalT">
+  <!-- Modal content -->
+  <div class="modal-contentT" >
+    <span id="closeT"onclick="document.getElementById('myModalT').style.display='none';">&times;</span>
+    <p id="contentT"></p>
+  </div>
+
+</div>
+
+<div class="appl">
+	<span>
+		<div class="messagebox" id="msgbx">
+			<ul id="messages" style="list-style-type:none;"></ul>
+		</div>
+	</span>
+	<div class="chatbox">
+		<input type="text"  id="myMessage">
+		<button id="sendbutton">Send</button>
+	</div>
+
+</div>
+<script>
+
+    function autocomplete(inp, arr) {
+      /*the autocomplete function takes two arguments,
+      the text field element and an array of possible autocompleted values:*/
+      var currentFocus;
+      /*execute a function when someone writes in the text field:*/
+      inp.addEventListener("input", function(e) {
+          var a, b, i, val = this.value;
+          /*close any already open lists of autocompleted values*/
+          closeAllLists();
+          if (!val) { return false;}
+          currentFocus = -1;
+          /*create a DIV element that will contain the items (values):*/
+          a = document.createElement("DIV");
+          a.setAttribute("id", this.id + "autocomplete-list");
+          a.setAttribute("class", "autocomplete-items");
+          /*append the DIV element as a child of the autocomplete container:*/
+          this.parentNode.appendChild(a);
+          /*for each item in the array...*/
+          for (i = 0; i < arr.length; i++) {
+            /*check if the item starts with the same letters as the text field value:*/
+            if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+              /*create a DIV element for each matching element:*/
+              b = document.createElement("DIV");
+              /*make the matching letters bold:*/
+              b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+              b.innerHTML += arr[i].substr(val.length);
+              /*insert a input field that will hold the current array item's value:*/
+              b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+              /*execute a function when someone clicks on the item value (DIV element):*/
+              b.addEventListener("click", function(e) {
+                  /*insert the value for the autocomplete text field:*/
+                  inp.value = this.getElementsByTagName("input")[0].value;
+                  /*close the list of autocompleted values,
+                  (or any other open lists of autocompleted values:*/
+                  closeAllLists();
+              });
+              a.appendChild(b);
+            }
+          }
+      });
+      /*execute a function presses a key on the keyboard:*/
+      inp.addEventListener("keydown", function(e) {
+          var x = document.getElementById(this.id + "autocomplete-list");
+          if (x) x = x.getElementsByTagName("div");
+          if (e.keyCode == 40) {
+            /*If the arrow DOWN key is pressed,
+            increase the currentFocus variable:*/
+            currentFocus++;
+            /*and and make the current item more visible:*/
+            addActive(x);
+          } else if (e.keyCode == 38) { //up
+            /*If the arrow UP key is pressed,
+            decrease the currentFocus variable:*/
+            currentFocus--;
+            /*and and make the current item more visible:*/
+            addActive(x);
+          } else if (e.keyCode == 13) {
+            /*If the ENTER key is pressed, prevent the form from being submitted,*/
+            e.preventDefault();
+            if (currentFocus > -1) {
+              /*and simulate a click on the "active" item:*/
+              if (x) x[currentFocus].click();
+            }
+          }
+      });
+      function addActive(x) {
+        /*a function to classify an item as "active":*/
+        if (!x) return false;
+        /*start by removing the "active" class on all items:*/
+        removeActive(x);
+        if (currentFocus >= x.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (x.length - 1);
+        /*add class "autocomplete-active":*/
+        x[currentFocus].classList.add("autocomplete-active");
+      }
+      function removeActive(x) {
+        /*a function to remove the "active" class from all autocomplete items:*/
+        for (var i = 0; i < x.length; i++) {
+          x[i].classList.remove("autocomplete-active");
+        }
+      }
+      function closeAllLists(elmnt) {
+        /*close all autocomplete lists in the document,
+        except the one passed as an argument:*/
+        var x = document.getElementsByClassName("autocomplete-items");
+        for (var i = 0; i < x.length; i++) {
+          if (elmnt != x[i] && elmnt != inp) {
+            x[i].parentNode.removeChild(x[i]);
+          }
+        }
+      }
+      /*execute a function when someone clicks in the document:*/
+      document.addEventListener("click", function (e) {
+          closeAllLists(e.target);
+      });
+    }
+    
+    /*An array containing all the country names in the world:*/
+    var countries = ["Which is the best place to visit in Summer?",
+			"Which places are likely to be visited in Gujarat?",
+			"What things should I carry along to Gir?",
+			"What is the current weather of Shillong?",
+			"Give me some information about Ahmedabad.",
+			"What is the distance between Ahmedabad and Mumbai?",
+			"How far is Kolkata from Patna?"];
+    
+    /*initiate the autocomplete function on the "myInput" element, and pass along the countries array as possible autocomplete values:*/
+    autocomplete(document.getElementById("myMessage"), countries);
+</script>
+</body>
+</html>
